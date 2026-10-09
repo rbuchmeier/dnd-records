@@ -1,6 +1,7 @@
 ---
 schemaVersion: 1
 id: entry-letter-after
+sessionId: ses-003
 accountId: acc-letters
 title: A letter without a seal
 subtitle: To Mara, from the ruined keep

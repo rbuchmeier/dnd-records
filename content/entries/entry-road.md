@@ -1,6 +1,7 @@
 ---
 schemaVersion: 1
 id: entry-road
+sessionId: ses-001
 accountId: acc-chronicle
 title: Where the road ends
 subtitle: Chapter I · A light beyond the mile stones

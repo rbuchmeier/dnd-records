@@ -1,5 +1,6 @@
 import YAML from 'yaml'
 import { z } from 'zod'
+import { resolveAssetUrl } from './assets'
 
 const dialogueSchema = z.object({
   speaker: z.string().min(1),
@@ -32,6 +33,7 @@ const entrySchema = z.object({
   schemaVersion: z.literal(1),
   id: z.string().min(1),
   accountId: z.string().min(1),
+  sessionId: z.string().min(1),
   title: z.string().min(1),
   subtitle: z.string(),
   order: z.number().int().positive(),
@@ -44,6 +46,19 @@ const entrySchema = z.object({
 export type Panel = z.infer<typeof panelSchema>
 export type Account = z.infer<typeof accountSchema>
 export type Entry = z.infer<typeof entrySchema> & { body: string }
+
+const sessionSchema = z.object({
+  schemaVersion: z.literal(1),
+  id: z.string().regex(/^ses-/),
+  number: z.number().int().positive(),
+  playedOn: z.iso.date(),
+  title: z.string().min(1),
+  summary: z.string().min(1),
+  location: z.string().min(1),
+  image: z.string().min(1),
+})
+
+export type Session = z.infer<typeof sessionSchema> & { body: string }
 
 function parseMarkdown(
   source: string,
@@ -100,6 +115,8 @@ function loadAccounts(): Account[] {
 }
 
 function loadEntries(loadedAccounts: Account[]): Entry[] {
+  // Load every entry's text up front for local filtering. Image paths remain
+  // strings here; rendering a lazy <img> controls when artwork is requested.
   const sources = import.meta.glob('../../content/entries/*.md', {
     query: '?raw',
     import: 'default',
@@ -123,6 +140,9 @@ function loadEntries(loadedAccounts: Account[]): Entry[] {
     if (!accountIds.has(entry.accountId)) {
       throw new Error(`${entry.id}: unknown account ID ${entry.accountId}`)
     }
+    if (!sessions.some((session) => session.id === entry.sessionId)) {
+      throw new Error(`${entry.id}: unknown session ID ${entry.sessionId}`)
+    }
     const position = `${entry.accountId}:${entry.order}`
     if (positions.has(position))
       throw new Error(`Duplicate entry order: ${position}`)
@@ -144,6 +164,29 @@ function loadEntries(loadedAccounts: Account[]): Entry[] {
   )
 }
 
+function loadSessions(): Session[] {
+  const sources = import.meta.glob('../../content/sessions/*.md', {
+    query: '?raw',
+    import: 'default',
+    eager: true,
+  }) as Record<string, string>
+  const loaded = Object.entries(sources).map(([path, source]) => {
+    const { metadata, body } = parseMarkdown(source, path)
+    return { ...sessionSchema.parse(metadata), body }
+  })
+  const ids = new Set<string>()
+  const numbers = new Set<number>()
+  for (const session of loaded) {
+    if (ids.has(session.id) || numbers.has(session.number)) {
+      throw new Error(`Duplicate session ID or number: ${session.id}`)
+    }
+    ids.add(session.id)
+    numbers.add(session.number)
+  }
+  return loaded.sort((a, b) => b.number - a.number)
+}
+
+export const sessions: Session[] = loadSessions()
 export const accounts: Account[] = loadAccounts()
 export const entries: Entry[] = loadEntries(accounts)
 
@@ -159,8 +202,14 @@ export function getAccountEntries(id: string): Entry[] {
   return entries.filter((entry) => entry.accountId === id)
 }
 
+export function getSessionEntries(id: string): Entry[] {
+  return entries.filter((entry) => entry.sessionId === id)
+}
+
 export function assetUrl(path: string): string {
-  if (/^https?:\/\//i.test(path)) return path
-  const base = import.meta.env.BASE_URL.replace(/\/$/, '')
-  return `${base}/${path.replace(/^\/+/, '')}`
+  return resolveAssetUrl(
+    path,
+    import.meta.env.VITE_ASSET_BASE_URL,
+    import.meta.env.BASE_URL,
+  )
 }

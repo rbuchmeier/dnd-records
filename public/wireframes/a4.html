@@ -1,0 +1,292 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>A4 — Margin Ledger</title>
+  <style>
+    * { box-sizing: border-box; }
+    :root {
+      --ink: #191919;
+      --mid: #767676;
+      --line: #c9c9c9;
+      --wash: #eeeeec;
+      --paper: #fafaf8;
+      --white: #fff;
+    }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      background: var(--paper);
+      color: var(--ink);
+      font: 15px/1.55 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    }
+    button, input { font: inherit; }
+    button { color: inherit; }
+    .masthead {
+      min-height: 92px;
+      padding: 18px 28px;
+      border-bottom: 1px solid var(--ink);
+      display: grid;
+      grid-template-columns: minmax(220px, 1fr) auto;
+      align-items: center;
+      gap: 28px;
+      background: var(--paper);
+      position: relative;
+      z-index: 3;
+    }
+    .identity { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; }
+    .badge {
+      display: inline-block;
+      background: var(--ink);
+      color: white;
+      font-weight: 800;
+      letter-spacing: .12em;
+      padding: 5px 8px;
+    }
+    h1 { font: 700 22px/1.1 Georgia, serif; margin: 0; }
+    .subtitle { color: var(--mid); font-size: 12px; }
+    .controls { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: flex-end; }
+    .search {
+      width: 220px;
+      height: 37px;
+      border: 1px solid var(--ink);
+      background: var(--white);
+      padding: 0 11px;
+      border-radius: 0;
+    }
+    .toggle { display: flex; }
+    .toggle button {
+      height: 37px;
+      border: 1px solid var(--ink);
+      background: transparent;
+      padding: 0 12px;
+      cursor: pointer;
+    }
+    .toggle button + button { border-left: 0; }
+    .toggle .active { background: var(--ink); color: white; }
+    .shell {
+      width: min(1180px, 100%);
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 210px minmax(0, 790px);
+      column-gap: 56px;
+      padding: 42px 28px 72px;
+      justify-content: center;
+    }
+    .chronology {
+      position: sticky;
+      top: 28px;
+      align-self: start;
+      max-height: calc(100vh - 56px);
+      overflow: auto;
+      padding-right: 18px;
+    }
+    .rail-title { font-size: 11px; text-transform: uppercase; letter-spacing: .16em; margin-bottom: 22px; }
+    .rail {
+      list-style: none;
+      margin: 0 0 0 6px;
+      padding: 0 0 0 20px;
+      border-left: 1px solid var(--ink);
+    }
+    .rail li { position: relative; padding: 0 0 28px; }
+    .rail li::before {
+      content: "";
+      position: absolute;
+      width: 9px;
+      height: 9px;
+      border: 1px solid var(--ink);
+      background: var(--paper);
+      left: -26px;
+      top: 3px;
+      border-radius: 50%;
+    }
+    .rail li.current::before { background: var(--ink); }
+    .rail a { color: inherit; text-decoration: none; display: block; }
+    .rail time { display: block; font-size: 11px; color: var(--mid); margin-bottom: 3px; }
+    .rail b { display: block; font: 700 15px/1.3 Georgia, serif; }
+    .rail small { color: var(--mid); }
+    main { min-width: 0; }
+    .intro { border-bottom: 1px solid var(--line); padding-bottom: 28px; margin-bottom: 44px; }
+    .eyebrow { color: var(--mid); font-size: 11px; text-transform: uppercase; letter-spacing: .16em; }
+    .intro h2 { font: 400 34px/1.12 Georgia, serif; margin: 8px 0 8px; max-width: 650px; }
+    .intro p { max-width: 620px; margin: 0; color: #525252; }
+    .session { scroll-margin-top: 24px; margin-bottom: 72px; }
+    .session-head {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 18px;
+      align-items: end;
+      padding-bottom: 13px;
+      border-bottom: 2px solid var(--ink);
+    }
+    .session h3 { font: 700 28px/1.1 Georgia, serif; margin: 5px 0 0; }
+    .date-strip {
+      border: 1px solid var(--ink);
+      padding: 6px 9px;
+      font-size: 12px;
+      white-space: nowrap;
+    }
+    .chapter-note { margin: 18px 0 24px; max-width: 670px; }
+    .comic { display: grid; gap: 8px; margin-bottom: 28px; }
+    .panel {
+      min-height: 235px;
+      border: 1px solid var(--ink);
+      background: var(--wash);
+      position: relative;
+      overflow: hidden;
+      padding: 14px;
+    }
+    .panel.tall { min-height: 330px; }
+    .panel::before, .panel::after { content: ""; position: absolute; border: 1px solid #aaa; }
+    .panel::before { width: 46%; height: 70%; transform: rotate(-13deg); right: 8%; top: 20%; border-radius: 50% 50% 10% 10%; }
+    .panel::after { width: 52%; height: 1px; left: -3%; bottom: 27%; transform: rotate(10deg); }
+    .panel-label { position: relative; z-index: 1; display: inline-block; background: var(--white); border: 1px solid var(--ink); padding: 3px 7px; font-size: 11px; }
+    .caption { position: absolute; z-index: 1; bottom: 14px; left: 14px; max-width: 66%; background: var(--white); border: 1px solid var(--ink); padding: 8px 10px; font-family: Georgia, serif; }
+    .panel-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .panel-row .panel { min-height: 205px; }
+    .letters-label { margin: 0 0 10px; font-size: 11px; letter-spacing: .15em; text-transform: uppercase; }
+    .letter {
+      border: 1px solid var(--ink);
+      background: var(--white);
+      padding: clamp(22px, 6vw, 54px);
+      margin-bottom: 14px;
+      font: 17px/1.72 Georgia, serif;
+    }
+    .letter-meta { font: 11px/1.4 ui-monospace, monospace; color: var(--mid); text-transform: uppercase; letter-spacing: .1em; margin-bottom: 25px; }
+    .letter p { margin: 0 0 1em; }
+    .letter .signoff { margin: 28px 0 0; font-style: italic; }
+    .continuity { text-align: center; color: var(--mid); font-size: 11px; padding: 2px 0 42px; }
+    footer {
+      border-top: 1px solid var(--ink);
+      padding: 22px 28px 38px;
+      display: flex;
+      justify-content: space-between;
+      gap: 28px;
+      color: #555;
+      font-size: 12px;
+    }
+    footer p { margin: 0; max-width: 650px; }
+    .mobile-date { display: none; }
+    @media (max-width: 760px) {
+      .masthead { grid-template-columns: 1fr; gap: 16px; padding: 16px; }
+      .controls { justify-content: flex-start; }
+      .search { width: 100%; }
+      .toggle { width: 100%; }
+      .toggle button { flex: 1; }
+      .shell { display: block; padding: 24px 16px 48px; }
+      .chronology { position: static; max-height: none; overflow: visible; padding: 0 0 24px; margin-bottom: 28px; border-bottom: 1px solid var(--line); }
+      .rail-title { margin-bottom: 10px; }
+      .rail { display: flex; gap: 8px; overflow-x: auto; border-left: 0; margin: 0; padding: 0 0 4px; }
+      .rail li { min-width: 180px; border: 1px solid var(--line); padding: 10px 12px; }
+      .rail li::before { display: none; }
+      .intro h2 { font-size: 27px; }
+      .session { margin-bottom: 58px; }
+      .session-head { display: block; }
+      .session h3 { font-size: 24px; }
+      .date-strip { display: inline-block; margin-top: 12px; }
+      .panel, .panel.tall { min-height: 235px; }
+      .panel-row { grid-template-columns: 1fr; }
+      .letter { font-size: 16px; padding: 26px 22px; }
+      footer { display: block; padding: 20px 16px 32px; }
+      footer p + p { margin-top: 12px; }
+    }
+  </style>
+</head>
+<body>
+  <header class="masthead">
+    <div class="identity">
+      <span class="badge">A4</span>
+      <h1>Margin Ledger</h1>
+      <span class="subtitle">Wireframe · controls illustrative</span>
+    </div>
+    <div class="controls" aria-label="Illustrative reading filters">
+      <input class="search" type="search" placeholder="Filter names, places, phrases…" aria-label="Filter story text">
+      <div class="toggle" aria-label="Content visibility">
+        <button class="active" type="button">Chronicles</button>
+        <button class="active" type="button">Letters</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="shell">
+    <aside class="chronology" aria-label="Session chronology">
+      <div class="rail-title">Story chronology · newest first</div>
+      <ol class="rail">
+        <li class="current">
+          <a href="#session-38"><time>07 OCT · YEAR 812</time><b>38 — The Hollow Crown</b><small>Chronicle + 2 letters</small></a>
+        </li>
+        <li>
+          <a href="#session-37"><time>30 SEP · YEAR 812</time><b>37 — Beneath Greywater</b><small>Chronicle + 1 letter</small></a>
+        </li>
+        <li><a href="#session-37"><time>23 SEP · YEAR 812</time><b>36 — A Door of Salt</b><small>Earlier in the ledger</small></a></li>
+      </ol>
+    </aside>
+
+    <main>
+      <section class="intro">
+        <div class="eyebrow">The Wayward Company · weekly record</div>
+        <h2>One continuous account, from the latest firelight backward.</h2>
+        <p>Scroll through every illustrated chronicle and every player letter in full. The left margin keeps your place in the campaign.</p>
+      </section>
+
+      <article class="session" id="session-38">
+        <header class="session-head">
+          <div><span class="eyebrow">Session 38 · Latest</span><h3>The Hollow Crown</h3></div>
+          <time class="date-strip">WED · 07 OCT · 812</time>
+        </header>
+        <p class="chapter-note">At the ridge above Osenfall, the company finds the king’s empty procession moving long after its bearers have vanished.</p>
+        <div class="comic" aria-label="Full chronicle strip">
+          <div class="panel tall"><span class="panel-label">Panel 01 · The ridge</span><div class="caption">“No footsteps. Only the bells beneath the road.”</div></div>
+          <div class="panel-row">
+            <div class="panel"><span class="panel-label">Panel 02 · The procession</span><div class="caption">Mara counts thirteen shadows.</div></div>
+            <div class="panel"><span class="panel-label">Panel 03 · The crown</span><div class="caption">The smallest shadow turns.</div></div>
+          </div>
+          <div class="panel"><span class="panel-label">Panel 04 · At the gate</span><div class="caption">To be continued beneath the western tower.</div></div>
+        </div>
+        <h4 class="letters-label">Letters carried from this session</h4>
+        <section class="letter">
+          <div class="letter-meta">Letter I · Mara to her brother · never sent</div>
+          <p>Tovin, I thought courage would feel like certainty. Tonight it felt like taking one more step after everyone had stopped pretending the road was safe.</p>
+          <p>The crown was hollow, just as the old songs say. But something inside it knew my name.</p>
+          <p class="signoff">Keep the north lamp lit — Mara</p>
+        </section>
+        <section class="letter">
+          <div class="letter-meta">Letter II · Orin’s field notes · page 64</div>
+          <p>Thirteen shadows, twelve travelers. The discrepancy is not a counting error. I checked twice before the gate and once after it closed behind us.</p>
+          <p class="signoff">Margin note: do not ring the road-bells.</p>
+        </section>
+      </article>
+
+      <div class="continuity" aria-hidden="true">↓ continue backward through the campaign ↓</div>
+
+      <article class="session" id="session-37">
+        <header class="session-head">
+          <div><span class="eyebrow">Session 37</span><h3>Beneath Greywater</h3></div>
+          <time class="date-strip">WED · 30 SEP · 812</time>
+        </header>
+        <p class="chapter-note">A flooded chapel, a borrowed boat, and the first clue that the royal procession never reached Osenfall alive.</p>
+        <div class="comic" aria-label="Full chronicle strip">
+          <div class="panel"><span class="panel-label">Panel 01 · Low tide</span><div class="caption">The bell rope rises from black water.</div></div>
+          <div class="panel-row">
+            <div class="panel"><span class="panel-label">Panel 02 · Below</span><div class="caption">A map is nailed beneath the pew.</div></div>
+            <div class="panel"><span class="panel-label">Panel 03 · The mark</span><div class="caption">Osenfall is circled in ash.</div></div>
+          </div>
+        </div>
+        <h4 class="letters-label">Letter carried from this session</h4>
+        <section class="letter">
+          <div class="letter-meta">Letter I · Fen to Captain Vale · sealed</div>
+          <p>Captain, Greywater is empty. We found no bodies, but the chapel register ends on the same date as the king’s journey. Someone has removed every name written after sundown.</p>
+          <p>We travel for Osenfall at first light. If this reaches you before we return, close the river road.</p>
+          <p class="signoff">In haste — Fen</p>
+        </section>
+      </article>
+    </main>
+  </div>
+
+  <footer>
+    <p><strong>Design rationale.</strong> A sticky margin chronology makes a long, uninterrupted reader navigable without turning sessions into summaries or cards. Full-width panels and complete letters preserve the rhythm of play first, reflection second, while the compact mobile rail keeps that same sense of place.</p>
+    <p>A4 · Margin Ledger<br>Low-fidelity discussion artifact</p>
+  </footer>
+</body>
+</html>

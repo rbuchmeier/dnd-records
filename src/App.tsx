@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import {
   Link,
   NavLink,
+  Navigate,
   Route,
   Routes,
   useLocation,
@@ -26,6 +27,7 @@ import {
   Menu,
   Search,
   Sparkles,
+  PanelsTopLeft,
   X,
 } from 'lucide-react'
 import ReactMarkdown from 'react-markdown'
@@ -38,6 +40,9 @@ import {
   assetUrl,
 } from './lib/content'
 import type { Account, Entry, Panel } from './lib/content'
+import DesignGallery from './designs/DesignGallery'
+import ContinuousChronicle from './reading/ContinuousChronicle'
+import WireframeGallery from './wireframes/WireframeGallery'
 
 const icons = {
   book: BookOpen,
@@ -76,6 +81,18 @@ function Sidebar({ onClose }: { onClose: () => void }) {
         <span>✦</span>
       </div>
       <nav aria-label="Campaign accounts">
+        <NavLink to="/" className="nav-link archive-link" onClick={onClose}>
+          <BookOpen size={18} />
+          <span>Continuous chronicle</span>
+        </NavLink>
+        <NavLink
+          to="/designs"
+          className="nav-link archive-link"
+          onClick={onClose}
+        >
+          <PanelsTopLeft size={18} />
+          <span>Session design gallery</span>
+        </NavLink>
         <p className="nav-label">THE STORY</p>
         {accounts
           .filter((a) => a.format === 'chronicle')
@@ -701,7 +718,11 @@ export default function App() {
     function keyboard(event: KeyboardEvent) {
       if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
         event.preventDefault()
-        navigate('/search')
+        const readerFilter = document.querySelector<HTMLInputElement>(
+          '[data-reader-filter]',
+        )
+        if (readerFilter) readerFilter.focus()
+        else navigate('/search')
       }
       if (event.key === 'Escape') setMenuOpen(false)
     }
@@ -717,9 +738,25 @@ export default function App() {
   const account = accounts.find((item) => location.pathname.includes(item.id))
   const section = location.pathname.startsWith('/search')
     ? 'Search'
-    : location.pathname === '/archive'
-      ? 'Complete archive'
-      : account?.title || 'Campaign Chronicle'
+    : location.pathname.startsWith('/designs')
+      ? 'Session design gallery'
+      : location.pathname === '/archive'
+        ? 'Complete archive'
+        : account?.title || 'Campaign Chronicle'
+  if (location.pathname === '/' || location.pathname === '/chronicle')
+    return <ContinuousChronicle />
+  if (location.pathname === '/styles')
+    return <Navigate to="/chronicle" replace />
+  if (
+    location.pathname === '/wireframes' ||
+    location.pathname.startsWith('/wireframes/')
+  )
+    return (
+      <Routes>
+        <Route path="/wireframes" element={<WireframeGallery />} />
+        <Route path="/wireframes/:wireframeId" element={<WireframeGallery />} />
+      </Routes>
+    )
   return (
     <div className={`app-shell ${menuOpen ? 'menu-open' : ''}`}>
       <a
@@ -768,6 +805,8 @@ export default function App() {
           className="page-content"
         >
           <Routes>
+            <Route path="/designs" element={<DesignGallery />} />
+            <Route path="/designs/:design" element={<DesignGallery />} />
             <Route path="/" element={<AccountReader />} />
             <Route path="/accounts/:accountId" element={<AccountReader />} />
             <Route

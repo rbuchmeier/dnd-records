@@ -1,6 +1,7 @@
 ---
 schemaVersion: 1
 id: entry-below
+sessionId: ses-003
 accountId: acc-chronicle
 title: Beneath the old stones
 subtitle: Chapter III · The crown without a king

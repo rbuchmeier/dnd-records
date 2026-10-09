@@ -1,6 +1,7 @@
 ---
 schemaVersion: 1
 id: entry-letter-before
+sessionId: ses-001
 accountId: acc-letters
 title: Before the thirteenth mile
 subtitle: To Mara, before the road vanished

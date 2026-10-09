@@ -145,7 +145,7 @@ These fragments assume `ses-003`, `ent-reed-ford`, `ent-bell-keeper`, and the il
 
 ## Dependencies, phases, and acceptance
 
-**Preview:** Render fictional account and entry Markdown with TypeScript-defined shapes. A proposed account has `id`, `title`, `format` (`chronicle`, `letters`, `journal`, or `compendium`), and optional `author`; entries have stable IDs, ordered presentation content, and a link to a shared event. Validate or render only the subset actually implemented in the preview.
+**Preview:** Render fictional account, entry, and session Markdown with TypeScript-defined shapes. Accounts have `id`, `title`, `format` (`chronicle`, `letters`, `journal`, or `compendium`), and `author`. Entries have stable IDs, account-relative `order`, and a required `sessionId`. The preview validates session references and unique session IDs/numbers. Session-first browsing sorts by descending session number (newest first); chronological reading within each account remains ascending by entry order. Preview session metadata includes `playedOn`, `title`, `summary`, `location`, and `image`; dates are real-world play dates, not fantasy calendar dates. The supplied dates are fictional. Shared event links remain part of the later full model, not yet implemented.
 
 **Later full model:** Compile all record types; validate IDs, claim status, source references, relationships, chronology, asset references, and Markdown links. Generate session/event order, account presentations, entity backlinks, search records, and galleries from the same source files.
 

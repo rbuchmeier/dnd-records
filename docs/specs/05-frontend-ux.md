@@ -11,6 +11,17 @@ Define how readers navigate and read a high-fantasy Campaign Chronicle across sc
 - Search, links among records, and illustrations are part of the reader experience.
 - All content is public. There are no account or spoiler-control flows.
 - The underlying content model uses stable IDs and Markdown content. See [data model](03-data-model.md) and [content authoring](04-content-authoring.md).
+- Accounts must also be browsable together by play session, newest session first. The Campaign Chronicle remains primary, with independent visibility toggles for player letters, field notes, and compendium accounts.
+
+**Latest design direction:** The primary view is continuous reading, not a collection of cards that require opening. Put the chronology in the left sidebar, newest first; scrolling over that rail moves through the story, and the active session follows the main reading position. Render the full comic panels, narration, dialogue, and letters inline. Focus on letters for now, with one show/hide control; defer journal/compendium controls in this view. Session buttons may remain as optional scroll shortcuts. On small screens use a compact sticky chronology strip and stack letters below the panels. The working implementation is at `#/` and `#/chronicle`.
+
+### Design comparison preview
+
+**Filtering and supplemental content:** In the continuous reader, letters (and future supplementary items) follow the session's panels, never a side column. A minimal sticky navigation bar contains a live text filter and adjacent Chronicles/Letters visibility toggles. Toggles persist per browser. Match whole entries independently using case-insensitive text containment; multiple whitespace-separated terms must all match somewhere in the entry. Search includes prose, metadata, narration, dialogue, alt descriptions, and author, not image pixels. Remove sessions with no enabled matching entries from the story and chronology; retain clear recovery controls for no matches or both types disabled. Load all entry text at startup and lazy-load every comic image independently, reserving its layout space. The old chapter reader and comparison studies remain separate from this behavior.
+
+**Reader cleanup:** Keep the continuous reader minimal: session numbers and dates in the rail, one Letters toggle, full comic panels, and letter bodies. No visible campaign branding, chapter titles, introductory copy, summaries, progress/footer ornamentation, letter wrapper headings, or design-study links. Retain accessible region labels without adding visible clutter. Earlier study routes remain isolated from the main reading experience.
+
+The working prototype retains `#/designs` and three earlier alternatives: `#/designs/timeline` (Story Thread), `#/designs/wheel` (Chronicle Wheel), and `#/designs/folio` (Session Folio). Each uses the same session records and account filters. Filters travel in the URL between alternatives and survive reloads. These older card-based studies remain for comparison; the continuous reader supersedes them as the main design. The original per-chapter reader remains at `#/accounts/acc-chronicle`.
 
 ## Visual direction
 
@@ -34,7 +45,7 @@ The following routes are recommendations; the chronological Chronicle is primary
 
 | Route | Reader purpose |
 |---|---|
-| `#/sessions` | Browse sessions in campaign order |
+| `#/sessions` | Browse sessions newest first |
 | `#/accounts/:id` | Read an account's chronological presentation of shared events |
 | `#/sessions/:id` | Read a session summary and its ordered event list |
 | `#/events/:id` | Read one event and its sources, status, links, and illustrations |
@@ -50,9 +61,9 @@ Use meaningful document titles and preserve the hash URL as the shareable addres
 
 ### Browse the chronology
 
-1. Open the session index, ordered by campaign/session number.
+1. Open the session index, ordered by descending campaign/session number (newest first).
 2. Scan each session's concise summary and optional date or image.
-3. Open a session to see its summary and events in session order.
+3. Toggle optional player accounts, then open a session's Chronicle or accompanying letter, note, or compendium entry. Within a session, events retain their specified chronological order.
 4. Read the event through the selected account's panels, narration, and dialogue; inspect sources, claim status, and related records as needed.
 5. Use previous/next event links to continue the chronology, including a clear transition at session boundaries.
 
@@ -83,7 +94,7 @@ Search is text-oriented. It indexes record titles and authored text, including m
 ### Session index and detail
 
 - Show session number and title, plus a concise summary.
-- Keep session ordering explicit and stable.
+- Keep session ordering explicit and stable, newest first. Keep the Chronicle visible while filtering optional player accounts.
 - On detail pages, list events in their specified order with links and short summaries.
 - Use a clear empty state if a session has no events yet.
 

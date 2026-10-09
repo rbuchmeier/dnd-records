@@ -2,7 +2,7 @@
 
 ## Goal and decisions
 
-Provision the smallest infrastructure needed for public artwork and durable Terraform state. This document is a researched proposal; no account has been inspected, no resources created, and no remote backend tested.
+Provision the smallest infrastructure needed for public artwork and durable Terraform state. This document records the architecture and acceptance criteria. Implementation status is maintained in [the infrastructure runbook](../../infra/README.md): both buckets are operational, remote-state locking has been verified, and the local app loads uploaded demo artwork from the public development origin. Production custom-domain delivery and independent backups remain future work.
 
 **Confirmed:** GitHub Pages hosts the site; Cloudflare R2 hosts artwork; Terraform manages Cloudflare infrastructure; a separate R2 remote state bucket is required from the beginning. Credentials and state never enter the public repository.
 
@@ -69,9 +69,9 @@ Compatibility flags follow Cloudflare's backend guidance; the lock option follow
 
 ## Locking test and protection boundaries
 
-**Unresolved operational validation, required before real state changes:** Against an isolated key in the state bucket, with the pinned Terraform version, verify initialization and state write/read; hold a first Terraform operation at its confirmation point; start a second and confirm it cannot acquire the same lock; finish/cancel the first and confirm lock cleanup and retry. Inspect failed-write/retry behavior and capture versions/results. Use a minimal built-in test resource so no application infrastructure is created by the test. Remove only the disposable test objects after confirming neither process is active.
+**Verified 2026-10-09 with Terraform 1.16.5:** Against an isolated key in the state bucket, initialization and state write/read succeeded. While an apply waited for confirmation, a second process failed to acquire the same lock (HTTP 412). After the first apply completed, a fresh plan acquired the lock, read state, and reported no changes. The built-in test resource was then destroyed; its isolated empty state remains. Repeat the fixture in the infrastructure runbook when changing Terraform/backend compatibility assumptions.
 
-R2 support for the needed conditional API makes lock compatibility a reasonable inference, not a tested fact in this specification. If the test fails, stop infrastructure work and investigate; do not proceed with unprotected concurrent state. A single operator and serialized infrastructure commands are an additional safeguard, not a lock substitute. Never force-unlock an active operation.
+The live check establishes lock compatibility for the pinned version and tested account, not all future versions or failure modes. If a repeat test fails, stop infrastructure work and investigate; do not proceed with unprotected concurrent state. A single operator and serialized infrastructure commands are an additional safeguard, not a lock substitute. Never force-unlock an active operation.
 
 Do not put a retention rule over `state/` or its `.tflock`: live state must be overwritten and locks deleted. If retained state copies are desired, use `snapshots/<timestamp>-<sha>.tfstate` and restrict retention to `snapshots/`. `prevent_destroy` cannot protect against dashboard deletion, removed Terraform configuration, or compromised administration; independent backups remain necessary.
 

@@ -1,6 +1,7 @@
 ---
 schemaVersion: 1
 id: entry-journal-tracks
+sessionId: ses-002
 accountId: acc-journal
 title: Tracks beyond the arch
 subtitle: Field note 01 · The unmapped road

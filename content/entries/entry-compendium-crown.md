@@ -1,6 +1,7 @@
 ---
 schemaVersion: 1
 id: entry-compendium-crown
+sessionId: ses-003
 accountId: acc-compendium
 title: The hollow crown
 subtitle: Relic · The ruined keep

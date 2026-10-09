@@ -5,7 +5,7 @@ test('comic artwork loads, dialogue has a transcript, and chapters navigate', as
 }) => {
   const errors: string[] = []
   page.on('pageerror', (error) => errors.push(error.message))
-  await page.goto('/')
+  await page.goto('/#/accounts/acc-chronicle')
   await expect(
     page.getByRole('heading', { name: 'Campaign Chronicle', exact: true }),
   ).toBeVisible()
@@ -43,7 +43,7 @@ test('comic artwork loads, dialogue has a transcript, and chapters navigate', as
 })
 
 test('table of contents and bookmarks work', async ({ page }) => {
-  await page.goto('/')
+  await page.goto('/#/accounts/acc-chronicle')
   await page
     .getByRole('button', { name: 'Bookmark this entry', exact: true })
     .click()
@@ -94,7 +94,7 @@ test('phone layout keeps panels readable and navigation accessible', async ({
   page,
 }) => {
   await page.setViewportSize({ width: 390, height: 844 })
-  await page.goto('/')
+  await page.goto('/#/accounts/acc-chronicle')
   await expect(
     page.getByRole('heading', { name: 'Campaign Chronicle', exact: true }),
   ).toBeVisible()
@@ -116,7 +116,7 @@ test('phone layout keeps panels readable and navigation accessible', async ({
   await expect(
     page.getByRole('button', { name: 'Close navigation', exact: true }),
   ).not.toBeVisible()
-  await page.goto('/')
+  await page.goto('/#/accounts/acc-chronicle')
   await page.locator('.comic-panel img').first().waitFor()
   await page.screenshot({
     path: '.local/screenshots/mobile.png',
@@ -125,7 +125,7 @@ test('phone layout keeps panels readable and navigation accessible', async ({
 })
 
 test('capture desktop design', async ({ page }) => {
-  await page.goto('/')
+  await page.goto('/#/accounts/acc-chronicle')
   await page.evaluate(() => document.fonts.ready)
   await expect
     .poll(() =>

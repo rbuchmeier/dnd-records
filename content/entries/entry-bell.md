@@ -1,6 +1,7 @@
 ---
 schemaVersion: 1
 id: entry-bell
+sessionId: ses-002
 accountId: acc-chronicle
 title: The bell that answered
 subtitle: Chapter II · A voice in the tower

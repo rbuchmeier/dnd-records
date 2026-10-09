@@ -1,6 +1,7 @@
 ---
 schemaVersion: 1
 id: entry-journal-bell
+sessionId: ses-003
 accountId: acc-journal
 title: On the tower bell
 subtitle: Field note 02 · Sound and stone

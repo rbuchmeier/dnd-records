@@ -2,6 +2,18 @@
 
 The local design preview needs no Cloudflare configuration. Source is on GitHub; the eventual website remains on GitHub Pages. Cloudflare supplies artwork storage and Terraform's private remote state.
 
+## Setup status — 2026-10-09
+
+- Cloudflare account ID: `1cc8e0849274de00586869b1e28af330` (non-secret).
+- Wrangler authorization and the account ID have been verified directly. Approved network commands now work.
+- Created `dnd-records-tfstate`; verified `r2.dev` is disabled and no custom domains are attached.
+- No custom domain for the initial preview; GoDaddy/DNS settings are unchanged. The artwork stack uses a development-only `r2.dev` origin.
+- Terraform 1.16.5 is installed project-locally (system 1.6.6 unchanged). The artwork configuration pins Cloudflare provider 5.27.0.
+- The management token and state credentials are configured in ignored, owner-only `.env.terraform`. Their values were not displayed or put in tracked files.
+- Remote state and live lock contention/release checks passed. Terraform created `dnd-records-assets`, its managed development domain, and read-only browser CORS. A follow-up plan reports no drift.
+- Uploaded and verified all three demo images at `https://pub-a038eaee886e47f389756a4e7c054927.r2.dev/art/`. `.env.local` configures the reader to use this origin; the browser smoke test confirms all comic images load from R2.
+- See the [infrastructure runbook](../infra/README.md) for exact resource ownership, versions, configuration, and verification results.
+
 ## Information to provide
 
 1. **R2 activation:** enable R2 in the new Cloudflare account and complete any billing setup Cloudflare requires. A Cloudflare account alone does not activate R2 token creation. [R2 authentication](https://developers.cloudflare.com/r2/api/tokens/).
@@ -21,8 +33,8 @@ Do not paste credentials into chat or commit them to the public repository.
 
 R2 data-plane keys and the Cloudflare management token serve different APIs. Bucket-scoped object keys are created after the relevant bucket exists. Keep saved credentials in your password manager/local credential environment and expose only the ones required for the current task. [R2 permission types](https://developers.cloudflare.com/r2/api/tokens/).
 
-## Work performed after that information is available
+## Remaining work
 
-Bootstrap a private state bucket, initialize and verify the R2 Terraform backend/locking, provision the public asset bucket and domain, configure scoped upload/read credentials, then connect asset verification and GitHub Pages deployment. Select an independent backup destination before uploading irreplaceable campaign art. The detailed procedure and remaining live compatibility checks are in [08-infrastructure.md](specs/08-infrastructure.md).
+The state and artwork buckets are operational. Next, implement immutable artwork publishing and asset verification, create dedicated uploader/CI credentials when those tools need them, and connect GitHub Pages deployment. Current demo uploads use Wrangler OAuth rather than the future S3 uploader. Select an independent backup destination before uploading irreplaceable campaign art. For production R2 delivery, replace the rate-limited development URL with a custom domain. Architecture and protection requirements are in [08-infrastructure.md](specs/08-infrastructure.md).
 
-None of these resources or credentials has been created by the design-preview implementation.
+No public website deployment or DNS changes were performed by this infrastructure rollout.
