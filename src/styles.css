@@ -1,11 +1,27 @@
 :root {
   font-family: 'Inter', sans-serif;
+  font-size: var(--text-base);
+  line-height: 1.4;
   font-synthesis: none;
   color-scheme: dark;
   color: var(--theme-ink);
   background: var(--theme-page);
   --serif: 'Cormorant Garamond', Georgia, serif;
   --display: 'Cinzel', Georgia, serif;
+  /* Type scale in rem so the reader's browser font-size preference applies.
+     Cormorant's small x-height needs larger sizes than Inter to read equally. */
+  --text-label: 0.75rem; /* uppercase, tracked labels only */
+  --text-sm: 0.875rem; /* smallest mixed-case UI text */
+  --text-base: 1rem;
+  --text-story: 1.25rem; /* serif comic text: narration, speech, sound */
+  --text-prose: 1.375rem; /* serif long-form: letters, prose */
+  --text-heading: 1.75rem;
+  --text-title: clamp(2.5rem, 6vw, 4rem);
+  --label-tracking: 0.12em;
+  --leading-tight: 1.2;
+  --leading-story: 1.35;
+  --leading-prose: 1.55;
+  --leading-body: 1.7;
   --theme-page: #171414;
   --theme-ink: #f7ede6;
   --theme-muted: #cdbbb0;
@@ -106,7 +122,8 @@ button {
   outline: none;
 }
 .not-found h1 {
-  font-size: 28px;
+  font-size: var(--text-heading);
+  line-height: var(--leading-tight);
   margin-bottom: 24px;
 }
 .not-found a {
