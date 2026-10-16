@@ -28,7 +28,7 @@ for (const route of [
     await page.keyboard.press('ControlOrMeta+K')
     await expect(page).toHaveURL(new RegExp(`#${route}$`))
     await page.getByRole('link', { name: 'Return to the Chronicle' }).click()
-    await expect(page.locator('.comic-panel')).toHaveCount(22)
+    await expect(page.locator('.comic-panel')).toHaveCount(29)
     await expect(page).toHaveTitle('Campaign Chronicle')
     expect(errors).toEqual([])
   })

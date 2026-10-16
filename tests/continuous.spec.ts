@@ -1,6 +1,14 @@
 import { expect, test } from '@playwright/test'
 
 const dialogue = [
+  ['Fen', 'Ohhh, shiny rocks!'],
+  ['Eli', 'Look, some abandoned Salamander nests!'],
+  ['Tad', 'The sky is falling!'],
+  ['Fen', 'Maybe there is a Basilisk around here!'],
+  ['Tad', 'Man that is a lot of gold!'],
+  ['Mom', 'I like that Jeweled Mace!'],
+  ['Fen', 'How do these Oozes keep sneaking up on me?!?'],
+  ['Fen', 'Ahh! Scary thing!'],
   ['Fen', 'Loot the bodies!'],
   ['Phillip', 'Hey guys! I think I found where they were sleeping!'],
   ['Eli', 'Why did they have so much money?'],
@@ -29,7 +37,7 @@ const dialogue = [
   ['Jalepeño · shouting', 'Squawk!!'],
 ]
 
-test('the session preserves all twenty-two panels and the supplied script without demo content', async ({
+test('both sessions preserve all twenty-nine panels and the supplied script without demo content', async ({
   page,
 }) => {
   const artRequests: string[] = []
@@ -38,7 +46,7 @@ test('the session preserves all twenty-two panels and the supplied script withou
   })
   await page.goto('/')
   const panels = page.locator('.comic-panel')
-  await expect(panels).toHaveCount(22)
+  await expect(panels).toHaveCount(29)
   await expect(page.locator('.panel-roll')).toHaveCount(2)
   for (const badge of await page.locator('.panel-roll').all()) {
     await expect(badge).toHaveCSS('width', '32px')
@@ -76,12 +84,22 @@ test('the session preserves all twenty-two panels and the supplied script withou
   await expect(
     page.locator('[data-panel-id="A5"] .panel-roll text'),
   ).toHaveText('1')
-  await expect(page.locator('[data-reading-session]')).toHaveCount(1)
+  await expect(page.locator('[data-reading-session]')).toHaveCount(2)
   expect(
     await panels.evaluateAll((nodes) =>
       nodes.map((node) => node.getAttribute('data-panel-id')),
     ),
-  ).toEqual(Array.from({ length: 22 }, (_, i) => `A${i + 1}`))
+  ).toEqual([
+    ...Array.from({ length: 7 }, (_, i) => `A${i + 23}`),
+    ...Array.from({ length: 22 }, (_, i) => `A${i + 1}`),
+  ])
+  await expect(page.locator('[data-panel-id="A23"] .narration')).toHaveText(
+    '3 Fireballs and a dead Hairball later...',
+  )
+  await expect(page.locator('[data-panel-id="A26"] .speech')).toHaveCount(3)
+  await expect(page.locator('[data-panel-id="A27"] .narration')).toHaveText(
+    'Fen shoots the ceiling and is attacked from below',
+  )
   await expect(page.locator('[data-panel-id="A10"] .thought')).toContainText(
     'Phillip · thinking',
   )
@@ -103,9 +121,9 @@ test('the session preserves all twenty-two panels and the supplied script withou
   await expect(page.locator('.speech p')).toHaveText(
     dialogue.map(([, text]) => `“${text}”`),
   )
-  await expect(panels.nth(2).locator('.narration')).toHaveText('300 PP later')
-  await expect(panels.nth(5).locator('.speech')).toHaveCount(2)
-  await expect(panels.nth(6).locator('.narration')).toHaveText(
+  await expect(panels.nth(9).locator('.narration')).toHaveText('300 PP later')
+  await expect(panels.nth(12).locator('.speech')).toHaveCount(2)
+  await expect(panels.nth(13).locator('.narration')).toHaveText(
     'One Long Rest later...',
   )
   await expect(
@@ -116,7 +134,7 @@ test('the session preserves all twenty-two panels and the supplied script withou
   )
   expect(artRequests).toEqual([])
   await page.goto('/#/chronicle')
-  await expect(panels).toHaveCount(22)
+  await expect(panels).toHaveCount(29)
 })
 
 test('chronicle visibility persists and the empty view recovers', async ({
@@ -134,7 +152,7 @@ test('chronicle visibility persists and the empty view recovers', async ({
   await page.getByRole('button', { name: 'Show all' }).click()
   await expect(chronicles).toBeChecked()
   await expect(letters).toBeChecked()
-  await expect(page.locator('.comic-panel')).toHaveCount(22)
+  await expect(page.locator('.comic-panel')).toHaveCount(29)
 })
 
 test('chronology scrolls the story and returns to the session start', async ({
@@ -143,14 +161,15 @@ test('chronology scrolls the story and returns to the session start', async ({
   await page.goto('/')
   const rail = page.getByRole('complementary', { name: 'Session chronology' })
   const session = rail.getByRole('button', {
-    name: 'Last session: Oct 8, 2026',
+    name: 'Session: Oct 15, 2026',
   })
   await expect(session).toHaveAttribute('aria-current', 'step')
-  await expect(page.locator('.reading-strip-date')).toHaveText('Oct 8, 2026')
-  await expect(page.locator('.reading-strip-date')).toHaveAttribute(
-    'datetime',
-    '2026-10-08',
-  )
+  const latestDate = page.locator('.reading-strip-date').first()
+  await expect(latestDate).toHaveText('Oct 15, 2026')
+  await expect(latestDate).toHaveAttribute('datetime', '2026-10-15')
+  await expect(
+    rail.getByRole('button', { name: 'Session: Oct 8, 2026' }),
+  ).toBeVisible()
   await rail.hover()
   await page.mouse.wheel(0, 10000)
   await expect.poll(() => page.evaluate(() => scrollY)).toBeGreaterThan(400)
@@ -166,7 +185,7 @@ for (const width of [390, 900, 1440]) {
     await page.goto('/')
     await page.evaluate(() => document.fonts.ready)
     const panels = page.locator('.comic-panel')
-    await expect(panels).toHaveCount(22)
+    await expect(panels).toHaveCount(29)
     for (const panel of await panels.all()) {
       const bounds = (await panel.boundingBox())!
       expect(bounds.height).toBeGreaterThanOrEqual(240)

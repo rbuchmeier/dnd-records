@@ -1,7 +1,7 @@
 ---
 schemaVersion: 1
 id: ses-rest-and-boulder
-title: Last session
+title: Session
 playedOn: '2026-10-08'
 ---
 

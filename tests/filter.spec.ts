@@ -24,6 +24,9 @@ test('filter finds narration and speakers, and combines with visibility controls
   await expect(page.locator('[data-reading-session]')).toHaveCount(0)
   await page.getByRole('checkbox', { name: 'Show chronicles' }).check()
   await expect(page.locator('.comic-panel')).toHaveCount(22)
+  await search.fill('jeweled mace')
+  await expect(page.locator('[data-reading-entry]')).toHaveCount(1)
+  await expect(page.locator('.comic-panel')).toHaveCount(7)
 })
 
 test('missing results clear with the button or Escape', async ({ page }) => {
@@ -39,11 +42,11 @@ test('missing results clear with the button or Escape', async ({ page }) => {
   ).toHaveCount(0)
   await controls.getByRole('button', { name: 'Clear filter' }).click()
   await expect(search).toHaveValue('')
-  await expect(page.locator('.comic-panel')).toHaveCount(22)
+  await expect(page.locator('.comic-panel')).toHaveCount(29)
   await search.fill('unknown phrase')
   await search.press('Escape')
   await expect(search).toHaveValue('')
-  await expect(page.locator('.comic-panel')).toHaveCount(22)
+  await expect(page.locator('.comic-panel')).toHaveCount(29)
 })
 
 test('the search shortcut focuses the reader filter', async ({ page }) => {

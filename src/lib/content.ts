@@ -195,7 +195,8 @@ function loadSessions(): Session[] {
   return loaded.sort(
     (a, b) =>
       (b.number ?? Number.MAX_SAFE_INTEGER) -
-      (a.number ?? Number.MAX_SAFE_INTEGER),
+        (a.number ?? Number.MAX_SAFE_INTEGER) ||
+      (b.playedOn ?? '').localeCompare(a.playedOn ?? ''),
   )
 }
 

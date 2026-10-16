@@ -3,7 +3,7 @@
 A React/TypeScript comic reader with session chronology, narration, dialogue,
 and letters. Vite serves Markdown content from `content/`.
 
-The Chronicle records the October 8, 2026 session; its session number is unset.
+The Chronicle records the October 8 and October 15, 2026 sessions; their session numbers are unset.
 Panels use stable sequential IDs (A1, A2, …), visible only in DevTools.
 Use narration, dialogue (`kind: thought` or `kind: shout`), and sound captions as needed.
 Optional `roll: crit` or `roll: crit-fail` adds a green D20/20 or red D20/1 badge.
