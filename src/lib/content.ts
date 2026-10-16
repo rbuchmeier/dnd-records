@@ -4,26 +4,34 @@ import { resolveAssetUrl } from './assets'
 
 const dialogueSchema = z.object({
   speaker: z.string().min(1),
+  kind: z.enum(['speech', 'thought', 'shout']).default('speech'),
   text: z.string().min(1),
   position: z.enum(['left', 'right']),
 })
 
-const panelSchema = z.object({
-  id: z.string().min(1),
-  image: z.string().min(1),
-  alt: z.string().min(1),
-  layout: z.enum(['wide', 'half']),
-  narration: z.string().optional(),
-  dialogue: z.array(dialogueSchema).optional(),
-  position: z.string().optional(),
-})
+const panelSchema = z
+  .object({
+    id: z.string().min(1),
+    image: z.string().min(1).optional(),
+    alt: z.string().min(1).optional(),
+    layout: z.enum(['wide', 'half']),
+    roll: z.enum(['crit', 'crit-fail']).optional(),
+    narration: z.string().optional(),
+    sound: z.string().min(1).optional(),
+    dialogue: z.array(dialogueSchema).optional(),
+    position: z.string().optional(),
+  })
+  .refine((panel) => !panel.image || !!panel.alt, {
+    message: 'Illustrated panels require alt text',
+    path: ['alt'],
+  })
 
 const accountSchema = z.object({
   schemaVersion: z.literal(1),
   id: z.string().min(1),
   title: z.string().min(1),
   subtitle: z.string().min(1),
-  format: z.enum(['chronicle', 'letters', 'journal', 'compendium']),
+  format: z.enum(['chronicle', 'letters']),
   author: z.string().min(1),
   description: z.string().min(1),
   icon: z.enum(['book', 'feather', 'compass', 'sparkles']),
@@ -37,8 +45,8 @@ const entrySchema = z.object({
   title: z.string().min(1),
   subtitle: z.string(),
   order: z.number().int().positive(),
-  dateLabel: z.string().min(1),
-  readTime: z.string().min(1),
+  dateLabel: z.string().min(1).optional(),
+  readTime: z.string().min(1).optional(),
   summary: z.string().min(1),
   panels: z.array(panelSchema),
 })
@@ -50,17 +58,17 @@ export type Entry = z.infer<typeof entrySchema> & { body: string }
 const sessionSchema = z.object({
   schemaVersion: z.literal(1),
   id: z.string().regex(/^ses-/),
-  number: z.number().int().positive(),
-  playedOn: z.iso.date(),
+  number: z.number().int().positive().optional(),
+  playedOn: z.iso.date().optional(),
   title: z.string().min(1),
-  summary: z.string().min(1),
-  location: z.string().min(1),
-  image: z.string().min(1),
+  summary: z.string().min(1).optional(),
+  location: z.string().min(1).optional(),
+  image: z.string().min(1).optional(),
 })
 
 export type Session = z.infer<typeof sessionSchema> & { body: string }
 
-function parseMarkdown(
+export function parseMarkdown(
   source: string,
   path: string,
 ): { metadata: unknown; body: string } {
@@ -96,8 +104,6 @@ function loadAccounts(): Account[] {
   const formatOrder: Record<Account['format'], number> = {
     chronicle: 0,
     letters: 1,
-    journal: 2,
-    compendium: 3,
   }
   loaded.sort(
     (a, b) =>
@@ -177,13 +183,20 @@ function loadSessions(): Session[] {
   const ids = new Set<string>()
   const numbers = new Set<number>()
   for (const session of loaded) {
-    if (ids.has(session.id) || numbers.has(session.number)) {
+    if (
+      ids.has(session.id) ||
+      (session.number !== undefined && numbers.has(session.number))
+    ) {
       throw new Error(`Duplicate session ID or number: ${session.id}`)
     }
     ids.add(session.id)
-    numbers.add(session.number)
+    if (session.number !== undefined) numbers.add(session.number)
   }
-  return loaded.sort((a, b) => b.number - a.number)
+  return loaded.sort(
+    (a, b) =>
+      (b.number ?? Number.MAX_SAFE_INTEGER) -
+      (a.number ?? Number.MAX_SAFE_INTEGER),
+  )
 }
 
 export const sessions: Session[] = loadSessions()
@@ -192,14 +205,6 @@ export const entries: Entry[] = loadEntries(accounts)
 
 export function getAccount(id: string): Account | undefined {
   return accounts.find((account) => account.id === id)
-}
-
-export function getEntry(id: string): Entry | undefined {
-  return entries.find((entry) => entry.id === id)
-}
-
-export function getAccountEntries(id: string): Entry[] {
-  return entries.filter((entry) => entry.accountId === id)
 }
 
 export function getSessionEntries(id: string): Entry[] {

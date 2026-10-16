@@ -7,12 +7,10 @@ import {
   getSessionEntries,
   sessions,
 } from '../lib/content'
-import type { Panel } from '../lib/content'
-import { formatSessionDate } from '../designs/shared'
+import type { Panel, Session } from '../lib/content'
+import { formatSessionDate } from '../lib/session-date'
 import { entrySearchText, matchesSearch } from '../lib/entry-search'
 import './continuous.css'
-import { ACTIVE_THEME_ID, themeProperties } from '../styles-preview/themes'
-import '../styles-preview/reader-themes.css'
 
 const LETTERS_KEY = 'hollow-crown-show-letters'
 const CHRONICLES_KEY = 'campaign-show-chronicles'
@@ -37,31 +35,76 @@ function storedVisibility(key: string): boolean {
   }
 }
 
+function sessionLabel(session: Session) {
+  const name = session.number ? `Session ${session.number}` : session.title
+  return session.playedOn
+    ? `${name}: ${formatSessionDate(session.playedOn)}`
+    : name
+}
+
 function StoryPanel({ panel }: { panel: Panel }) {
   const [failed, setFailed] = useState(false)
   return (
-    <figure className={`comic-panel ${panel.layout}`}>
-      {!failed ? (
-        <img
-          src={assetUrl(panel.image)}
-          alt={panel.alt}
-          style={{ objectPosition: panel.position || 'center' }}
-          loading="lazy"
-          decoding="async"
-          onError={() => setFailed(true)}
-        />
-      ) : (
-        <div className="image-placeholder">
-          <span>Illustration unavailable</span>
-        </div>
+    <figure
+      className={`comic-panel ${panel.layout}${!panel.image ? ' text-only' : ''}${panel.roll ? ' has-roll' : ''}`}
+      data-panel-id={panel.id}
+    >
+      {panel.roll && (
+        <svg
+          className={`panel-roll ${panel.roll}`}
+          viewBox="0 0 48 52"
+          role="img"
+          aria-label={
+            panel.roll === 'crit'
+              ? 'Critical hit: natural 20'
+              : 'Critical fail: natural 1'
+          }
+        >
+          <title>
+            {panel.roll === 'crit'
+              ? 'Critical hit: natural 20'
+              : 'Critical fail: natural 1'}
+          </title>
+          <path className="die-body" d="M24 2 45 14v24L24 50 3 38V14Z" />
+          <path
+            className="die-facets"
+            d="m24 2-14 34h28L24 2M3 14l7 22-7 2m42-24-7 22 7 2M10 36l14 14 14-14"
+          />
+          <text x="24" y="29" textAnchor="middle">
+            {panel.roll === 'crit' ? '20' : '1'}
+          </text>
+        </svg>
       )}
+      {panel.image &&
+        (!failed ? (
+          <img
+            src={assetUrl(panel.image)}
+            alt={panel.alt}
+            style={{ objectPosition: panel.position || 'center' }}
+            loading="lazy"
+            decoding="async"
+            onError={() => setFailed(true)}
+          />
+        ) : (
+          <div className="image-placeholder">
+            <span>Illustration unavailable</span>
+          </div>
+        ))}
       {panel.narration && (
         <figcaption className="narration">{panel.narration}</figcaption>
       )}
       <div className="dialogue-group">
+        {panel.sound && <p className="sound-caption">{panel.sound}</p>}
         {panel.dialogue?.map((line, i) => (
-          <blockquote className={`speech ${line.position}`} key={i}>
-            <cite>{line.speaker}</cite>
+          <blockquote
+            className={`speech ${line.position}${line.kind !== 'speech' ? ` ${line.kind}` : ''}`}
+            key={i}
+          >
+            <cite>
+              {line.speaker}
+              {line.kind === 'thought' && ' · thinking'}
+              {line.kind === 'shout' && ' · shouting'}
+            </cite>
             <p>“{line.text}”</p>
           </blockquote>
         ))}
@@ -126,6 +169,17 @@ export default function ContinuousChronicle() {
       /* Reading works without browser storage. */
     }
   }, [showLetters, showChronicles])
+
+  useEffect(() => {
+    function keyboard(event: KeyboardEvent) {
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
+        event.preventDefault()
+        filterRef.current?.focus()
+      }
+    }
+    window.addEventListener('keydown', keyboard)
+    return () => window.removeEventListener('keydown', keyboard)
+  }, [])
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'instant' })
@@ -214,8 +268,6 @@ export default function ContinuousChronicle() {
   return (
     <div
       className={`continuous-reader ${showLetters ? 'with-letters' : 'without-letters'}`}
-      data-theme={ACTIVE_THEME_ID}
-      style={themeProperties(ACTIVE_THEME_ID)}
     >
       <a
         className="skip-link"
@@ -268,17 +320,21 @@ export default function ContinuousChronicle() {
             <button
               type="button"
               key={session.id}
-              aria-label={`Session ${session.number}: ${formatSessionDate(session.playedOn)}`}
+              aria-label={sessionLabel(session)}
               aria-current={session.id === activeId ? 'step' : undefined}
               onClick={() => jumpTo(session.id)}
             >
               <span className="reading-session-dot">
-                {String(session.number).padStart(2, '0')}
+                {session.number ? String(session.number).padStart(2, '0') : '—'}
               </span>
               <span className="reading-session-label">
-                <time dateTime={session.playedOn}>
-                  {formatSessionDate(session.playedOn)}
-                </time>
+                {session.playedOn ? (
+                  <time dateTime={session.playedOn}>
+                    {formatSessionDate(session.playedOn)}
+                  </time>
+                ) : (
+                  <span>{session.title}</span>
+                )}
               </span>
             </button>
           ))}
@@ -397,14 +453,18 @@ export default function ContinuousChronicle() {
                 id={`reading-${session.id}`}
                 data-reading-session={session.id}
                 key={session.id}
-                aria-label={`Session ${session.number}: ${formatSessionDate(session.playedOn)}`}
+                aria-label={sessionLabel(session)}
               >
-                <time
-                  className="reading-strip-date"
-                  dateTime={session.playedOn}
-                >
-                  {formatSessionDate(session.playedOn)}
-                </time>
+                {session.playedOn ? (
+                  <time
+                    className="reading-strip-date"
+                    dateTime={session.playedOn}
+                  >
+                    {formatSessionDate(session.playedOn)}
+                  </time>
+                ) : (
+                  <p className="reading-strip-date">{session.title}</p>
+                )}
                 <div
                   className={`reading-spread ${showLetters && letters.length ? 'has-correspondence' : ''}`}
                 >
@@ -434,7 +494,7 @@ export default function ContinuousChronicle() {
                   {showLetters && letters.length > 0 && (
                     <aside
                       className="reading-correspondence"
-                      aria-label={`Letters from session ${session.number}`}
+                      aria-label={`Letters from ${sessionLabel(session)}`}
                     >
                       {letters.map((entry) => (
                         <article

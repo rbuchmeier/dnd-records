@@ -16,6 +16,7 @@ export function entrySearchText(entry: Entry, author: string): string {
       ...entry.panels.flatMap((panel) => [
         panel.alt,
         panel.narration ?? '',
+        panel.sound ?? '',
         ...(panel.dialogue ?? []).map((line) => `${line.speaker} ${line.text}`),
       ]),
     ].join(' '),

@@ -5,8 +5,6 @@ title: Campaign Chronicle
 subtitle: An illustrated history
 format: chronicle
 author: The party archive
-description: A story of a lost road, a watchful bell, and the crown hidden beneath an abandoned keep.
+description: The party's adventures, in panels.
 icon: book
 ---
-
-The Hollow Crown is a fictional sample campaign. Follow its opening chapters as a comic-style account of the party's journey.
